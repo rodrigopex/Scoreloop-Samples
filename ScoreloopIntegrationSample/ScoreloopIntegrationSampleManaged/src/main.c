@@ -202,7 +202,7 @@ static void RequestUser(AppData_t *app)
     }
 
     /* Make the asynchronous request */
-    rc = SC_UserController_RequestUser(app->userController);
+    rc = SC_UserController_LoadUser(app->userController);
     if (rc != SC_OK) {
         SC_UserController_Release(app->userController);
         HandleError(app, rc);
@@ -363,9 +363,9 @@ static void LoadLeaderboardCompletionCallback(void *userData, SC_Error_t complet
         return;
     }
 
-    unsigned int i, numScores = SC_ScoreList_GetScoresCount(scoreList);
+    unsigned int i, numScores = SC_ScoreList_GetCount(scoreList);
     for (i = 0; i < numScores; ++i) {
-        SC_Score_h score = SC_ScoreList_GetScore(scoreList, i);
+        SC_Score_h score = SC_ScoreList_GetAt(scoreList, i);
         SC_User_h user = SC_Score_GetUser(score);
         SC_String_h login = user ? SC_User_GetLogin(user) : NULL;
         SC_String_h formattedScore;
@@ -485,9 +485,9 @@ static void LoadAchievementsCompletionCallback(void *userData, SC_Error_t comple
     }
     LOG("Done loading Achievements");
 
-    unsigned int i, numAchievements = SC_AchievementList_GetAchievementsCount(achievementList);
+    unsigned int i, numAchievements = SC_AchievementList_GetCount(achievementList);
     for (i = 0; i < numAchievements; ++i) {
-        SC_Achievement_h achievement = SC_AchievementList_GetAchievement(achievementList, i);
+        SC_Achievement_h achievement = SC_AchievementList_GetAt(achievementList, i);
         SC_Award_h award = SC_Achievement_GetAward(achievement);
         LOG("  Achieved Award: %s", SC_String_GetData(SC_Award_GetIdentifier(award)));
     }
@@ -619,7 +619,7 @@ static void LoadChallengesCompletionCallback(void *userData, SC_Error_t completi
     challengeList = SC_ChallengesController_GetChallenges(app->challengesController);
 
     /* Log number of challenges for demonstration only*/
-    challengeCount = challengeList != NULL ? SC_ChallengeList_GetChallengesCount(challengeList) : 0;
+    challengeCount = challengeList != NULL ? SC_ChallengeList_GetCount(challengeList) : 0;
     LOG("Done loading Challenges. Got: %d", challengeCount);
 
     /* Accept some challenge if there is one with mode 0 for demonstration purposes only */
@@ -628,7 +628,7 @@ static void LoadChallengesCompletionCallback(void *userData, SC_Error_t completi
         SC_Challenge_h challenge;
 
         for (i = 0; i < challengeCount; ++i) {
-            challenge = SC_ChallengeList_GetChallenge(challengeList, i);
+            challenge = SC_ChallengeList_GetAt(challengeList, i);
 
             if (SC_Challenge_GetMode(challenge) == 0) {
 
@@ -827,7 +827,7 @@ static SC_Money_h GetStake(AppData_t *app)
 
     /* Just pick the first stake here - if available */
     if (SC_MoneyList_GetCount(moneyList) > 0) {
-        return SC_MoneyList_GetMoney(moneyList, 0);
+        return SC_MoneyList_GetAt(moneyList, 0);
     }
     else {
         return NULL;
