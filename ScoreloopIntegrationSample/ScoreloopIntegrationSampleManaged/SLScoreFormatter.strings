@@ -1,0 +1,24 @@
+"DefaultFormat" = "%R%r %S %m %M";
+"NoLevelFormat" = "%r Dollars";
+"LevelOnlyFormat" = "%l %L";
+
+"ModeSymbol" = "Mode";
+"LevelSymbol" = "Speed";
+"ResultSymbol" = "$";
+"Separator" = "@";
+
+"1" = "incredible slow";
+"2" = "really slow";
+"3" = "quite slow";
+"4" = "slow";
+"5" = "medium";
+"6" = "bit faster";
+"7" = "fast";
+"8" = "really fast";
+"9" = "incredible fast";
+"10" = "lightning fast";
+
+"mode:0" = "mini";
+"mode:1" = "medi";
+"mode:2" = "maxi";
+
