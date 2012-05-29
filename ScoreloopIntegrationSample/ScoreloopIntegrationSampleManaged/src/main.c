@@ -823,7 +823,7 @@ static double GetScoreResult(AppData_t *app)
 static SC_Money_h GetStake(AppData_t *app)
 {
     /* Get all possible stakes */
-    SC_MoneyList_h moneyList = SC_Session_GetChallangeStakes(SC_Client_GetSession(app->client));
+    SC_MoneyList_h moneyList = SC_Session_GetChallengeStakes(SC_Client_GetSession(app->client));
 
     /* Just pick the first stake here - if available */
     if (SC_MoneyList_GetCount(moneyList) > 0) {
