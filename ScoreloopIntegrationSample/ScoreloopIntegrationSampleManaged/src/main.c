@@ -258,7 +258,7 @@ static void SubmitScore(AppData_t *app, double result, unsigned int mode)
     }
 
     /* Create and configure the score */
-    rc = SC_Score_New(&app->score);
+    rc = SC_Client_CreateScore(app->client, &app->score);
     if (rc != SC_OK) {
         SC_ScoreController_Release(app->scoreController); /* Cleanup Controller */
         HandleError(app, rc);
