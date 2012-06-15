@@ -127,15 +127,6 @@ int main(int argc, char *argv[])
 
     /* Initialize the Scoreloop platform dependent SC_InitData_t structure to default values. */
     SC_InitData_Init(&initData);
-
-    /* Optionally change the version fields, the run-loop type and the log writer to other values
-     * (below are the default values as set by SC_InitData_Init):
-     *
-     * initData.currentVersion = SC_INIT_CURRENT_VERSION;
-     * initData.requiredMinimumVersion = SC_INIT_VERSION_1_0;
-     * initData.logWriter = NULL;
-     * initData.runLoopType = SC_RUN_LOOP_TYPE_BPS;
-     */
     
     /* Now, create the Scoreloop Client with the initialized SC_InitData_t structure
      * as well as the game-id and game-secret as found on the developer portal.
@@ -158,13 +149,13 @@ int main(int argc, char *argv[])
         bps_event_t *event;
         bps_get_event(&event, -1);
 
-        /* Give it to Scoreloop first */
-        if (SC_HandleBPSEvent(&initData, event) == BPS_SUCCESS) {
-            continue;
-        }
 
+        /* Scoreloop event handling  */
+        if (bps_event_get_domain(event) == SC_GetBPSEventDomain(&initData)) {
+            SC_HandleBPSEvent(&initData, event);
+        }
         /* Dialog and Navigator event handling */
-        if (bps_event_get_domain(event) == navigator_get_domain()) {
+        else if (bps_event_get_domain(event) == navigator_get_domain()) {
             if (bps_event_get_code(event) == NAVIGATOR_EXIT) {
                 break;
             }
@@ -173,7 +164,6 @@ int main(int argc, char *argv[])
             dialog_destroy(dialog_event_get_dialog_instance(event));
     		app.dialog = 0;
         }
-
         /* Add more BPS event handling here... */
     }
 
