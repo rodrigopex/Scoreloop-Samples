@@ -77,7 +77,7 @@ static void RequestUserCompletionCallback(void *userData, SC_Error_t completionS
 static void SubmitScore(AppData_t *app, double result, unsigned int mode);
 static void SubmitScoreCompletionCallback(void *userData, SC_Error_t completionStatus);
 
-static void LoadLeaderboard(AppData_t *app, SC_Score_h score, SC_ScoreSearchList_t searchList, unsigned int count);
+static void LoadLeaderboard(AppData_t *app, SC_Score_h score, SC_ScoresSearchList_t searchList, unsigned int count);
 static void LoadLeaderboardCompletionCallback(void *userData, SC_Error_t completionStatus);
 
 static void AchieveAward(AppData_t *app, const char *awardIdentifier);
@@ -286,14 +286,13 @@ static void SubmitScoreCompletionCallback(void *userData, SC_Error_t completionS
     SC_ScoreController_Release(app->scoreController);
 
     /* Request the leaderboard here just for demonstration purposes */
-    LoadLeaderboard(app, app->score, SC_SCORE_SEARCH_LIST_GLOBAL, 15);
+    LoadLeaderboard(app, app->score, SC_SCORES_SEARCH_LIST_ALL, 15);
 
     /* Cleanup Score */
     SC_Score_Release(app->score);
 }
 
-static void LoadLeaderboard(AppData_t *app, SC_Score_h score,
-        SC_ScoreSearchList_t searchList, unsigned int count)
+static void LoadLeaderboard(AppData_t *app, SC_Score_h score, SC_ScoresSearchList_t searchList, unsigned int count)
 {
     /* Create a ScoresController */
     SC_Error_t rc = SC_Client_CreateScoresController(app->client, &app->scoresController, LoadLeaderboardCompletionCallback, app);
@@ -312,7 +311,7 @@ static void LoadLeaderboard(AppData_t *app, SC_Score_h score,
     }
 
     /* Load the Leaderboard for the given score and count */
-    rc = SC_ScoresController_LoadRangeForScore(app->scoresController, score, count);
+    rc = SC_ScoresController_LoadScoresAroundScore(app->scoresController, score, count);
     if (rc != SC_OK) {
         SC_ScoresController_Release(app->scoresController); /* Cleanup Controller */
         HandleError(app, rc);
@@ -345,11 +344,10 @@ static void LoadLeaderboardCompletionCallback(void *userData, SC_Error_t complet
     /* Get the score formatter here - remember that you need to add a
      * scoreloop/SLScoreFormatter.strings file to your asset files in order to retrieve a formatter.
      */
-    SC_ScoreFormatter_h scoreFormatter;
-    SC_Error_t rc = SC_Client_GetScoreFormatter(app->client, &scoreFormatter);
-    if (rc != SC_OK) {
+    SC_ScoreFormatter_h scoreFormatter = SC_Client_GetScoreFormatter(app->client);
+    if (!scoreFormatter) {
         SC_ScoresController_Release(app->scoresController); /* Cleanup Controller */
-        HandleError(app, rc);
+        HandleError(app, SC_NOT_FOUND);
         return;
     }
 
@@ -361,7 +359,7 @@ static void LoadLeaderboardCompletionCallback(void *userData, SC_Error_t complet
         SC_String_h formattedScore;
 
         /* Format the score - we take ownership of string */
-        rc = SC_ScoreFormatter_FormatScore(scoreFormatter, score, SC_SCORE_FORMAT_DEFAULT, &formattedScore);
+        int rc = SC_ScoreFormatter_FormatScore(scoreFormatter, score, SC_SCORE_FORMAT_DEFAULT, &formattedScore);
         if (rc != SC_OK) {
             HandleError(app, rc);
             return;
@@ -402,8 +400,8 @@ static void AchieveAward(AppData_t *app, const char *awardIdentifier)
     /* Synchronize achievement if indicated - this can be done at some other point in time and does not have to come
      * after every setting of an achievement. 
      */
-    if (SC_LocalAchievementsController_ShouldSynchronizeAchievements(app->achievementsController) == SC_TRUE) {
-        rc = SC_LocalAchievementsController_SynchronizeAchievements(app->achievementsController);
+    if (SC_LocalAchievementsController_ShouldSynchronize(app->achievementsController) == SC_TRUE) {
+        rc = SC_LocalAchievementsController_Synchronize(app->achievementsController);
         if (rc != SC_OK) {
             SC_LocalAchievementsController_Release(app->achievementsController); /* Cleanup Controller */
             HandleError(app, rc);
