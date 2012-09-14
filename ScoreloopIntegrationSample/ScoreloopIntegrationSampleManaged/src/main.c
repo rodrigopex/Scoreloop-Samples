@@ -114,12 +114,13 @@ int main(int argc, char *argv[])
     AppData_t app;
     SC_InitData_t initData;
     SC_Error_t rc;
+    char versionBuffer[0x100]; /* Thats 256 bytes */
 
     LOG("Starting Scoreloop Sample...")
 
     /* Initialize the BPS event system */
     bps_initialize();
-    bps_set_verbosity(0); /* Set to 1 or 2 for mor output if you like */
+    bps_set_verbosity(0); /* Set to 1 or 2 for more output if you like */
     navigator_request_events(0);
     dialog_request_events(0);
 
@@ -128,6 +129,11 @@ int main(int argc, char *argv[])
     /* Initialize the Scoreloop platform dependent SC_InitData_t structure to default values. */
     SC_InitData_Init(&initData);
     
+    /* What version of the Scoreloop library do we use? */
+    if (SC_GetVersionInfo(&initData, versionBuffer, sizeof(versionBuffer))) {
+        LOG("Version-Info: %s", versionBuffer);
+    }
+
     /* Now, create the Scoreloop Client with the initialized SC_InitData_t structure
      * as well as the game-id and game-secret as found on the developer portal.
      */
