@@ -38,6 +38,7 @@
 								<option id="com.qnx.qcc.option.linker.libraries.288923666" name="Libraries (-l)" superClass="com.qnx.qcc.option.linker.libraries" valueType="libs">
 									<listOptionValue builtIn="false" value="scoreloopcore"/>
 									<listOptionValue builtIn="false" value="bps"/>
+									<listOptionValue builtIn="false" value="screen"/>
 								</option>
 								<option id="com.qnx.qcc.option.linker.security.1568668257" name="Enhanced Security (-Wl,-z,relro -Wl,-z,now)" superClass="com.qnx.qcc.option.linker.security" value="true" valueType="boolean"/>
 								<option id="com.qnx.qcc.option.linker.libraryPaths.646505049" name="Library Paths (-L)" superClass="com.qnx.qcc.option.linker.libraryPaths"/>
@@ -91,6 +92,7 @@
 								<option id="com.qnx.qcc.option.linker.libraries.1662407185" name="Libraries (-l)" superClass="com.qnx.qcc.option.linker.libraries" valueType="libs">
 									<listOptionValue builtIn="false" value="scoreloopcore"/>
 									<listOptionValue builtIn="false" value="bps"/>
+									<listOptionValue builtIn="false" value="screen"/>
 								</option>
 								<option id="com.qnx.qcc.option.linker.security.873949936" name="Enhanced Security (-Wl,-z,relro -Wl,-z,now)" superClass="com.qnx.qcc.option.linker.security" value="true" valueType="boolean"/>
 								<option id="com.qnx.qcc.option.linker.pie.645975575" name="Position Independent Executable (-pie)" superClass="com.qnx.qcc.option.linker.pie" value="true" valueType="boolean"/>
@@ -145,6 +147,7 @@
 								<option id="com.qnx.qcc.option.linker.libraries.296546881" name="Libraries (-l)" superClass="com.qnx.qcc.option.linker.libraries" valueType="libs">
 									<listOptionValue builtIn="false" value="scoreloopcore"/>
 									<listOptionValue builtIn="false" value="bps"/>
+									<listOptionValue builtIn="false" value="screen"/>
 								</option>
 								<option id="com.qnx.qcc.option.linker.security.704827733" name="Enhanced Security (-Wl,-z,relro -Wl,-z,now)" superClass="com.qnx.qcc.option.linker.security" value="true" valueType="boolean"/>
 								<option id="com.qnx.qcc.option.linker.libraryPaths.622406152" name="Library Paths (-L)" superClass="com.qnx.qcc.option.linker.libraryPaths"/>

@@ -1,4 +1,4 @@
-Scoreloop Integration - Show integration with BPS event system - v1.0.05
+Scoreloop Integration - Show integration with BPS event system - v1.0.09
 
 ========================================================================
 Using a managed project vs. using a makefile project
