@@ -32,6 +32,7 @@
 #include <bps/bps.h>
 #include <bps/navigator.h>
 #include <bps/dialog.h>
+#include <bps/screen.h>
 
 #include <scoreloop/scoreloopcore.h>
 
@@ -64,6 +65,8 @@ typedef struct AppData_tag {
     SC_LocalAchievementsController_h achievementsController;
     SC_ChallengeController_h challengeController;
     SC_ChallengesController_h challengesController;
+    screen_context_t screenContext;
+    screen_window_t screenWindow;
     dialog_instance_t dialog;
 } AppData_t;
 
@@ -77,7 +80,7 @@ static void RequestUserCompletionCallback(void *userData, SC_Error_t completionS
 static void SubmitScore(AppData_t *app, double result, unsigned int mode);
 static void SubmitScoreCompletionCallback(void *userData, SC_Error_t completionStatus);
 
-static void LoadLeaderboard(AppData_t *app, SC_Score_h score, SC_ScoresSearchList_t searchList, unsigned int count);
+static void LoadLeaderboard(AppData_t *app, SC_Score_h score, const SC_ScoresSearchList_t searchList, unsigned int count);
 static void LoadLeaderboardCompletionCallback(void *userData, SC_Error_t completionStatus);
 
 static void AchieveAward(AppData_t *app, const char *awardIdentifier);
@@ -105,6 +108,9 @@ static void HandleError(AppData_t *app, SC_Error_t error);
 static double GetScoreResult(AppData_t *app);
 static SC_Money_h GetStake(AppData_t *app);
 
+static int SetupScreen(AppData_t *app);
+static void TeardownScreen(AppData_t *app);
+
 /*-------------------------------------------------------------------------------------*
  * Main
  *-------------------------------------------------------------------------------------*/
@@ -114,20 +120,34 @@ int main(int argc, char *argv[])
     AppData_t app;
     SC_InitData_t initData;
     SC_Error_t rc;
+    char versionBuffer[0x100]; /* Thats 256 bytes */
 
     LOG("Starting Scoreloop Sample...")
 
+    memset(&app, 0, sizeof(AppData_t));
+
     /* Initialize the BPS event system */
     bps_initialize();
-    bps_set_verbosity(0); /* Set to 1 or 2 for mor output if you like */
+    bps_set_verbosity(0); /* Set to 1 or 2 for more output if you like */
     navigator_request_events(0);
     dialog_request_events(0);
 
-    memset(&app, 0, sizeof(AppData_t));
+    /* Bring up a window *before* initializing Scoreloop.
+     * Initialize the screen so that the window group Id is properly set, to allow
+     * the dialogs to be displayed. */
+    if (SetupScreen(&app) != EXIT_SUCCESS) {
+        LOG("Unable to initialize screen.");
+        return EXIT_FAILURE;
+    }
 
     /* Initialize the Scoreloop platform dependent SC_InitData_t structure to default values. */
     SC_InitData_Init(&initData);
     
+    /* What version of the Scoreloop library do we use? */
+    if (SC_GetVersionInfo(&initData, versionBuffer, sizeof(versionBuffer))) {
+        LOG("Version-Info: %s", versionBuffer);
+    }
+
     /* Now, create the Scoreloop Client with the initialized SC_InitData_t structure
      * as well as the game-id and game-secret as found on the developer portal.
      */
@@ -170,6 +190,15 @@ int main(int argc, char *argv[])
     /* Cleanup the Scoreloop client */
     SC_Client_Release(app.client);
 
+    /* Destroy the dialog, if it still exists. */
+    if (app.dialog) {
+    	dialog_destroy(app.dialog);
+    	app.dialog = 0;
+    }
+
+    /* Shut down window */
+    TeardownScreen(&app);
+
     /* Shutdown BPS */
     bps_shutdown();
 
@@ -179,7 +208,7 @@ int main(int argc, char *argv[])
 }
 
 /*-------------------------------------------------------------------------------------*
- * Functions
+ * Scoreloop Functions
  *-------------------------------------------------------------------------------------*/
 
 static void RequestUser(AppData_t *app)
@@ -292,7 +321,7 @@ static void SubmitScoreCompletionCallback(void *userData, SC_Error_t completionS
     SC_Score_Release(app->score);
 }
 
-static void LoadLeaderboard(AppData_t *app, SC_Score_h score, SC_ScoresSearchList_t searchList, unsigned int count)
+static void LoadLeaderboard(AppData_t *app, SC_Score_h score, const SC_ScoresSearchList_t searchList, unsigned int count)
 {
     /* Create a ScoresController */
     SC_Error_t rc = SC_Client_CreateScoresController(app->client, &app->scoresController, LoadLeaderboardCompletionCallback, app);
@@ -359,7 +388,7 @@ static void LoadLeaderboardCompletionCallback(void *userData, SC_Error_t complet
         SC_String_h formattedScore;
 
         /* Format the score - we take ownership of string */
-        int rc = SC_ScoreFormatter_FormatScore(scoreFormatter, score, SC_SCORE_FORMAT_DEFAULT, &formattedScore);
+        SC_Error_t rc = SC_ScoreFormatter_FormatScore(scoreFormatter, score, SC_SCORE_FORMAT_DEFAULT, &formattedScore);
         if (rc != SC_OK) {
             HandleError(app, rc);
             return;
@@ -820,6 +849,95 @@ static SC_Money_h GetStake(AppData_t *app)
     else {
         return NULL;
     }
+}
+
+/*-------------------------------------------------------------------------------------*
+ * Screen setup routines (taken from Dialog Samples and adapted)
+ *-------------------------------------------------------------------------------------*/
+
+/**
+ * Use the PID to set the window group id.
+ */
+static char * get_window_group_id()
+{
+    static char s_window_group_id[16] = "";
+
+    if (s_window_group_id[0] == '\0') {
+        snprintf(s_window_group_id, sizeof(s_window_group_id), "%d", getpid());
+    }
+
+    return s_window_group_id;
+}
+
+/**
+ * Set up a basic screen, so that the navigator will
+ * send window state events when the window state changes.
+ *
+ * @return @c EXIT_SUCCESS or @c EXIT_FAILURE
+ */
+static int SetupScreen(AppData_t *app)
+{
+	do {
+		if (screen_create_context(&app->screenContext, SCREEN_APPLICATION_CONTEXT) != 0) {
+			break;
+		}
+
+		if (screen_create_window(&app->screenWindow, app->screenContext) != 0) {
+			break;
+		}
+
+		if (screen_create_window_group(app->screenWindow, get_window_group_id()) != 0) {
+			break;
+		}
+
+		int usage = SCREEN_USAGE_NATIVE;
+		if (screen_set_window_property_iv(app->screenWindow, SCREEN_PROPERTY_USAGE, &usage) != 0) {
+			break;
+		}
+
+		if (screen_create_window_buffers(app->screenWindow, 1) != 0) {
+			break;
+		}
+
+		screen_buffer_t buff;
+		if (screen_get_window_property_pv(app->screenWindow, SCREEN_PROPERTY_RENDER_BUFFERS, (void*)&buff) != 0) {
+			break;
+		}
+
+		int buffer_size[2];
+		if (screen_get_buffer_property_iv(buff, SCREEN_PROPERTY_BUFFER_SIZE, buffer_size) != 0) {
+			break;
+		}
+
+		int attribs[] = { SCREEN_BLIT_COLOR, 0xff0092cd, SCREEN_BLIT_END };
+		if (screen_fill(app->screenContext, buff, attribs) != 0) {
+			break;
+		}
+
+		int dirty_rects[4] = {0, 0, buffer_size[0], buffer_size[1]};
+		if (screen_post_window(app->screenWindow, buff, 1, (const int*)dirty_rects, 0) != 0) {
+			break;
+		}
+
+		return EXIT_SUCCESS;
+	}
+	while (false);
+
+	TeardownScreen(app);
+
+	return EXIT_FAILURE;
+}
+
+static void TeardownScreen(AppData_t *app)
+{
+	if (app->screenWindow) {
+		screen_destroy_window(app->screenWindow);
+		app->screenWindow = NULL;
+	}
+	if (app->screenContext) {
+		screen_destroy_context(app->screenContext);
+		app->screenContext = NULL;
+	}
 }
 
 /* EOF */
