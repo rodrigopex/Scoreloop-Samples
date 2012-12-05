@@ -16,6 +16,11 @@
 
 #include "ScoreloopSampleCascades.hpp"
 
+#include "ScoreloopBpsEventHandler.hpp"
+#include "ScoreloopData.hpp"
+#include "ScoreloopDefines.hpp"
+
+#include <bb/cascades/AbstractPane>
 #include <bb/cascades/Application>
 #include <bb/cascades/QmlDocument>
 #include <bb/cascades/AbstractPane>
@@ -27,8 +32,10 @@
 
 using namespace bb::cascades;
 
+//! [0]
 ScoreloopSampleCascades::ScoreloopSampleCascades(bb::cascades::Application *app)
-: QObject(app)
+    : QObject(app)
+    , m_eventHandler(0)
 {
 	// We must initialize scoreloop only after the app has posted some window.
     // So, we show a splash screen and listen to the posted() signal of the mainWindow on which we
@@ -45,35 +52,43 @@ ScoreloopSampleCascades::ScoreloopSampleCascades(bb::cascades::Application *app)
 void ScoreloopSampleCascades::showMain()
 {
 	// Initialize the Scoreloop platform dependent SC_InitData_t structure to default values.
-	SC_InitData_Init(&initData_);
+	SC_InitData_Init(&m_initData);
 
 	// Create Client instance - this is a blocking call and requires that a window was posted by the app before
-	SC_Error_t rc = SC_Client_New(&client_, &initData_, GAME_ID, GAME_SECRET, GAME_VERSION, GAME_CURRENCY, GAME_LANGUAGE);
+	SC_Error_t rc = SC_Client_New(&m_client, &m_initData, GAME_ID, GAME_SECRET, GAME_VERSION, GAME_CURRENCY, GAME_LANGUAGE);
 
-    if(rc == SC_OK) {
-    	// plug Scoreloop into the BPS Event Loop
-    	eventHandler_ = new ScoreloopBpsEventHandler(initData_);
+    ScoreloopData *scoreloopData = 0;
 
-        // create ScoreloopData object to expose data to QML
-        scoreloopData_ = new ScoreloopData(client_);
+    if (rc == SC_OK) {
+        // Plug Scoreloop into the BPS Event Loop
+        m_eventHandler = new ScoreloopBpsEventHandler(m_initData);
 
-        // start loading. signals will fire when done.
-        scoreloopData_->load();
-    }
-    else {
+        // Create ScoreloopData object to expose data to QML
+        scoreloopData = new ScoreloopData(m_client, this);
+
+        // Start loading. signals will fire when done.
+        scoreloopData->load();
+    } else {
         qDebug() << "Could not initialize Scoreloop: " << SC_MapErrorToStr(rc);
         return;
     }
 
-    // create scene document from main.qml asset
-    // set parent to created document to ensure it exists for the whole application lifetime
+    // Create scene document from main.qml asset
+    // Set parent to created document to ensure it exists for the whole application lifetime
     QmlDocument *qml = QmlDocument::create("asset:///main.qml").parent(this);
 
-    // make ScoreloopData available in qml
-    qml->setContextProperty("scoreloop", scoreloopData_);
+    // Make ScoreloopData available in qml
+    qml->setContextProperty("_scoreloop", scoreloopData);
 
-    // create root object for the UI
+    // Create root object for the UI
     AbstractPane *root = qml->createRootObject<AbstractPane>();
+
     // set created root object as a scene
     Application::instance()->setScene(root);
+}
+//! [0]
+
+ScoreloopSampleCascades::~ScoreloopSampleCascades()
+{
+    delete m_eventHandler;
 }

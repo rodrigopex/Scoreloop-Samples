@@ -14,22 +14,25 @@
 * limitations under the License.
 */
 
-/*
- * ScoreloopBpsEventHandler
- * Plugs the Scoreloop Event Handler into BPS' runloop
- *
- */
-
 #include "ScoreloopBpsEventHandler.hpp"
 
-ScoreloopBpsEventHandler::ScoreloopBpsEventHandler(SC_InitData_t initData) {
-	initData_ = initData;
-
-	// this only works after SC_Client_New was called
-	subscribe(SC_GetBPSEventDomain(&initData_));
+//! [0]
+ScoreloopBpsEventHandler::ScoreloopBpsEventHandler(SC_InitData_t initData)
+    : m_initData(initData)
+{
+    /**
+     * Subscribe to the Scoreloop event domain.
+     *
+     * Note: This only works after SC_Client_New was called
+     */
+    subscribe(SC_GetBPSEventDomain(&m_initData));
 }
+//! [0]
 
-void ScoreloopBpsEventHandler::event(bps_event_t *event) {
-    SC_HandleBPSEvent(&initData_, event);
+//! [1]
+void ScoreloopBpsEventHandler::event(bps_event_t *event)
+{
+    // Pass the event to the Scoreloop event handler
+    SC_HandleBPSEvent(&m_initData, event);
 }
-
+//! [1]

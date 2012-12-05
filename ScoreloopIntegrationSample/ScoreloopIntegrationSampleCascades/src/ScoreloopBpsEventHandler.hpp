@@ -14,19 +14,28 @@
 * limitations under the License.
 */
 
-#ifndef SCORELOOPBPSEVENTHANDLER_HPP_
-#define SCORELOOPBPSEVENTHANDLER_HPP_
+#ifndef SCORELOOPBPSEVENTHANDLER_HPP
+#define SCORELOOPBPSEVENTHANDLER_HPP
 
 #include <bb/core/AbstractBpsEventHandler.hpp>
+
 #include <scoreloop/scoreloopcore.h>
 
-class ScoreloopBpsEventHandler : protected bb::AbstractBpsEventHandler {
+/**
+ * @short A helper class that integrates the Scoreloop event handler with the BPS event loop.
+ */
+//! [0]
+class ScoreloopBpsEventHandler : protected bb::AbstractBpsEventHandler
+{
 public:
-	ScoreloopBpsEventHandler(SC_InitData_t initData);
-	void event(bps_event_t *event);
+    ScoreloopBpsEventHandler(SC_InitData_t initData);
+
+    // Reimplemented from AbstractBpsEventHandler, called whenever a new BPS event is received
+    void event(bps_event_t *event);
 
 private:
-	SC_InitData_t initData_;
+    SC_InitData_t m_initData;
 };
+//! [0]
 
-#endif /* SCORELOOPBPSEVENTHANDLER_HPP_ */
+#endif
