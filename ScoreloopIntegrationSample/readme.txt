@@ -1,28 +1,15 @@
 Scoreloop Integration - Show integration with BPS event system - v1.0.09
 
-========================================================================
-Using a managed project vs. using a makefile project
-
-This package contains two different types of project options. One is an eclipse-based
-managed project and the other is a makefile project. The managed project leverages
-Eclipse to manage the build process so that you donít have to worry about makefiles.
-When using this option you can adjust build settings through the project properties.
-The makefile project allows you to see and edit makefiles for direct control of the
-build process.
+These samples demonstrate how to integrate Scoreloop with the BPS event
+system, make some API calls and receive data in callbacks.
 
 ========================================================================
-Sample Description:
-
-The Scoreloop Integration Sample is a GUI-less application intended to show
-the integration of Scoreloop into the BPS event system.
-Besides showing how Scoreloop is set up and how it is integrated with the BPS
-event loop, it also makes several calls to the Scoreloop Servers exemplifying
-the basic API usage.
-
-Feature summary
-- Shows how to initialize Scoreloop
-- Shows the integration into the BPS event system
-- Example Scoreloop API usage
+This repository contains three sample applications:
+ - Managed: Eclipse toolchain used to build, configurable through Project
+     Properties dialog
+ - Makefile: Builds with a Makefile, allows you to tweak all build settings
+ - Cascades: Shows how to use Scoreloop in an application built with the
+     Cascades UI framework and Qt toolchain.
 
 ========================================================================
 Requirements:
