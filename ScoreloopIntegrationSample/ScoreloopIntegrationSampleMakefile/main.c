@@ -32,6 +32,7 @@
 #include <bps/bps.h>
 #include <bps/navigator.h>
 #include <bps/dialog.h>
+#include <bps/screen.h>
 
 #include <scoreloop/scoreloopcore.h>
 
@@ -64,6 +65,8 @@ typedef struct AppData_tag {
     SC_LocalAchievementsController_h achievementsController;
     SC_ChallengeController_h challengeController;
     SC_ChallengesController_h challengesController;
+    screen_context_t screenContext;
+    screen_window_t screenWindow;
     dialog_instance_t dialog;
 } AppData_t;
 
@@ -77,7 +80,7 @@ static void RequestUserCompletionCallback(void *userData, SC_Error_t completionS
 static void SubmitScore(AppData_t *app, double result, unsigned int mode);
 static void SubmitScoreCompletionCallback(void *userData, SC_Error_t completionStatus);
 
-static void LoadLeaderboard(AppData_t *app, SC_Score_h score, SC_ScoreSearchList_t searchList, unsigned int count);
+static void LoadLeaderboard(AppData_t *app, SC_Score_h score, const SC_ScoresSearchList_t searchList, unsigned int count);
 static void LoadLeaderboardCompletionCallback(void *userData, SC_Error_t completionStatus);
 
 static void AchieveAward(AppData_t *app, const char *awardIdentifier);
@@ -105,6 +108,9 @@ static void HandleError(AppData_t *app, SC_Error_t error);
 static double GetScoreResult(AppData_t *app);
 static SC_Money_h GetStake(AppData_t *app);
 
+static int SetupScreen(AppData_t *app);
+static void TeardownScreen(AppData_t *app);
+
 /*-------------------------------------------------------------------------------------*
  * Main
  *-------------------------------------------------------------------------------------*/
@@ -114,29 +120,34 @@ int main(int argc, char *argv[])
     AppData_t app;
     SC_InitData_t initData;
     SC_Error_t rc;
+    char versionBuffer[0x100]; /* Thats 256 bytes */
 
     LOG("Starting Scoreloop Sample...")
 
+    memset(&app, 0, sizeof(AppData_t));
+
     /* Initialize the BPS event system */
     bps_initialize();
-    bps_set_verbosity(0); /* Set to 1 or 2 for mor output if you like */
+    bps_set_verbosity(0); /* Set to 1 or 2 for more output if you like */
     navigator_request_events(0);
     dialog_request_events(0);
 
-    memset(&app, 0, sizeof(AppData_t));
+    /* Bring up a window *before* initializing Scoreloop.
+     * Initialize the screen so that the window group Id is properly set, to allow
+     * the dialogs to be displayed. */
+    if (SetupScreen(&app) != EXIT_SUCCESS) {
+        LOG("Unable to initialize screen.");
+        return EXIT_FAILURE;
+    }
 
     /* Initialize the Scoreloop platform dependent SC_InitData_t structure to default values. */
     SC_InitData_Init(&initData);
-
-    /* Optionally change the version fields, the run-loop type and the log writer to other values
-     * (below are the default values as set by SC_InitData_Init):
-     *
-     * initData.currentVersion = SC_INIT_CURRENT_VERSION;
-     * initData.requiredMinimumVersion = SC_INIT_VERSION_1_0;
-     * initData.logWriter = NULL;
-     * initData.runLoopType = SC_RUN_LOOP_TYPE_BPS;
-     */
     
+    /* What version of the Scoreloop library do we use? */
+    if (SC_GetVersionInfo(&initData, versionBuffer, sizeof(versionBuffer))) {
+        LOG("Version-Info: %s", versionBuffer);
+    }
+
     /* Now, create the Scoreloop Client with the initialized SC_InitData_t structure
      * as well as the game-id and game-secret as found on the developer portal.
      */
@@ -158,13 +169,13 @@ int main(int argc, char *argv[])
         bps_event_t *event;
         bps_get_event(&event, -1);
 
-        /* Give it to Scoreloop first */
-        if (SC_HandleBPSEvent(&initData, event) == BPS_SUCCESS) {
-            continue;
-        }
 
+        /* Scoreloop event handling  */
+        if (bps_event_get_domain(event) == SC_GetBPSEventDomain(&initData)) {
+            SC_HandleBPSEvent(&initData, event);
+        }
         /* Dialog and Navigator event handling */
-        if (bps_event_get_domain(event) == navigator_get_domain()) {
+        else if (bps_event_get_domain(event) == navigator_get_domain()) {
             if (bps_event_get_code(event) == NAVIGATOR_EXIT) {
                 break;
             }
@@ -173,12 +184,20 @@ int main(int argc, char *argv[])
             dialog_destroy(dialog_event_get_dialog_instance(event));
     		app.dialog = 0;
         }
-
         /* Add more BPS event handling here... */
     }
 
     /* Cleanup the Scoreloop client */
     SC_Client_Release(app.client);
+
+    /* Destroy the dialog, if it still exists. */
+    if (app.dialog) {
+    	dialog_destroy(app.dialog);
+    	app.dialog = 0;
+    }
+
+    /* Shut down window */
+    TeardownScreen(&app);
 
     /* Shutdown BPS */
     bps_shutdown();
@@ -189,7 +208,7 @@ int main(int argc, char *argv[])
 }
 
 /*-------------------------------------------------------------------------------------*
- * Functions
+ * Scoreloop Functions
  *-------------------------------------------------------------------------------------*/
 
 static void RequestUser(AppData_t *app)
@@ -202,7 +221,7 @@ static void RequestUser(AppData_t *app)
     }
 
     /* Make the asynchronous request */
-    rc = SC_UserController_RequestUser(app->userController);
+    rc = SC_UserController_LoadUser(app->userController);
     if (rc != SC_OK) {
         SC_UserController_Release(app->userController);
         HandleError(app, rc);
@@ -258,7 +277,7 @@ static void SubmitScore(AppData_t *app, double result, unsigned int mode)
     }
 
     /* Create and configure the score */
-    rc = SC_Score_New(&app->score);
+    rc = SC_Client_CreateScore(app->client, &app->score);
     if (rc != SC_OK) {
         SC_ScoreController_Release(app->scoreController); /* Cleanup Controller */
         HandleError(app, rc);
@@ -296,14 +315,13 @@ static void SubmitScoreCompletionCallback(void *userData, SC_Error_t completionS
     SC_ScoreController_Release(app->scoreController);
 
     /* Request the leaderboard here just for demonstration purposes */
-    LoadLeaderboard(app, app->score, SC_SCORE_SEARCH_LIST_GLOBAL, 15);
+    LoadLeaderboard(app, app->score, SC_SCORES_SEARCH_LIST_ALL, 15);
 
     /* Cleanup Score */
     SC_Score_Release(app->score);
 }
 
-static void LoadLeaderboard(AppData_t *app, SC_Score_h score,
-        SC_ScoreSearchList_t searchList, unsigned int count)
+static void LoadLeaderboard(AppData_t *app, SC_Score_h score, const SC_ScoresSearchList_t searchList, unsigned int count)
 {
     /* Create a ScoresController */
     SC_Error_t rc = SC_Client_CreateScoresController(app->client, &app->scoresController, LoadLeaderboardCompletionCallback, app);
@@ -322,7 +340,7 @@ static void LoadLeaderboard(AppData_t *app, SC_Score_h score,
     }
 
     /* Load the Leaderboard for the given score and count */
-    rc = SC_ScoresController_LoadRangeForScore(app->scoresController, score, count);
+    rc = SC_ScoresController_LoadScoresAroundScore(app->scoresController, score, count);
     if (rc != SC_OK) {
         SC_ScoresController_Release(app->scoresController); /* Cleanup Controller */
         HandleError(app, rc);
@@ -355,23 +373,22 @@ static void LoadLeaderboardCompletionCallback(void *userData, SC_Error_t complet
     /* Get the score formatter here - remember that you need to add a
      * scoreloop/SLScoreFormatter.strings file to your asset files in order to retrieve a formatter.
      */
-    SC_ScoreFormatter_h scoreFormatter;
-    SC_Error_t rc = SC_Client_GetScoreFormatter(app->client, &scoreFormatter);
-    if (rc != SC_OK) {
+    SC_ScoreFormatter_h scoreFormatter = SC_Client_GetScoreFormatter(app->client);
+    if (!scoreFormatter) {
         SC_ScoresController_Release(app->scoresController); /* Cleanup Controller */
-        HandleError(app, rc);
+        HandleError(app, SC_NOT_FOUND);
         return;
     }
 
-    unsigned int i, numScores = SC_ScoreList_GetScoresCount(scoreList);
+    unsigned int i, numScores = SC_ScoreList_GetCount(scoreList);
     for (i = 0; i < numScores; ++i) {
-        SC_Score_h score = SC_ScoreList_GetScore(scoreList, i);
+        SC_Score_h score = SC_ScoreList_GetAt(scoreList, i);
         SC_User_h user = SC_Score_GetUser(score);
         SC_String_h login = user ? SC_User_GetLogin(user) : NULL;
         SC_String_h formattedScore;
 
         /* Format the score - we take ownership of string */
-        rc = SC_ScoreFormatter_FormatScore(scoreFormatter, score, SC_SCORE_FORMAT_DEFAULT, &formattedScore);
+        SC_Error_t rc = SC_ScoreFormatter_FormatScore(scoreFormatter, score, SC_SCORE_FORMAT_DEFAULT, &formattedScore);
         if (rc != SC_OK) {
             HandleError(app, rc);
             return;
@@ -412,8 +429,8 @@ static void AchieveAward(AppData_t *app, const char *awardIdentifier)
     /* Synchronize achievement if indicated - this can be done at some other point in time and does not have to come
      * after every setting of an achievement. 
      */
-    if (SC_LocalAchievementsController_ShouldSynchronizeAchievements(app->achievementsController) == SC_TRUE) {
-        rc = SC_LocalAchievementsController_SynchronizeAchievements(app->achievementsController);
+    if (SC_LocalAchievementsController_ShouldSynchronize(app->achievementsController) == SC_TRUE) {
+        rc = SC_LocalAchievementsController_Synchronize(app->achievementsController);
         if (rc != SC_OK) {
             SC_LocalAchievementsController_Release(app->achievementsController); /* Cleanup Controller */
             HandleError(app, rc);
@@ -485,9 +502,9 @@ static void LoadAchievementsCompletionCallback(void *userData, SC_Error_t comple
     }
     LOG("Done loading Achievements");
 
-    unsigned int i, numAchievements = SC_AchievementList_GetAchievementsCount(achievementList);
+    unsigned int i, numAchievements = SC_AchievementList_GetCount(achievementList);
     for (i = 0; i < numAchievements; ++i) {
-        SC_Achievement_h achievement = SC_AchievementList_GetAchievement(achievementList, i);
+        SC_Achievement_h achievement = SC_AchievementList_GetAt(achievementList, i);
         SC_Award_h award = SC_Achievement_GetAward(achievement);
         LOG("  Achieved Award: %s", SC_String_GetData(SC_Award_GetIdentifier(award)));
     }
@@ -619,7 +636,7 @@ static void LoadChallengesCompletionCallback(void *userData, SC_Error_t completi
     challengeList = SC_ChallengesController_GetChallenges(app->challengesController);
 
     /* Log number of challenges for demonstration only*/
-    challengeCount = challengeList != NULL ? SC_ChallengeList_GetChallengesCount(challengeList) : 0;
+    challengeCount = challengeList != NULL ? SC_ChallengeList_GetCount(challengeList) : 0;
     LOG("Done loading Challenges. Got: %d", challengeCount);
 
     /* Accept some challenge if there is one with mode 0 for demonstration purposes only */
@@ -628,7 +645,7 @@ static void LoadChallengesCompletionCallback(void *userData, SC_Error_t completi
         SC_Challenge_h challenge;
 
         for (i = 0; i < challengeCount; ++i) {
-            challenge = SC_ChallengeList_GetChallenge(challengeList, i);
+            challenge = SC_ChallengeList_GetAt(challengeList, i);
 
             if (SC_Challenge_GetMode(challenge) == 0) {
 
@@ -823,15 +840,104 @@ static double GetScoreResult(AppData_t *app)
 static SC_Money_h GetStake(AppData_t *app)
 {
     /* Get all possible stakes */
-    SC_MoneyList_h moneyList = SC_Session_GetChallangeStakes(SC_Client_GetSession(app->client));
+    SC_MoneyList_h moneyList = SC_Session_GetChallengeStakes(SC_Client_GetSession(app->client));
 
     /* Just pick the first stake here - if available */
     if (SC_MoneyList_GetCount(moneyList) > 0) {
-        return SC_MoneyList_GetMoney(moneyList, 0);
+        return SC_MoneyList_GetAt(moneyList, 0);
     }
     else {
         return NULL;
     }
+}
+
+/*-------------------------------------------------------------------------------------*
+ * Screen setup routines (taken from Dialog Samples and adapted)
+ *-------------------------------------------------------------------------------------*/
+
+/**
+ * Use the PID to set the window group id.
+ */
+static char * get_window_group_id()
+{
+    static char s_window_group_id[16] = "";
+
+    if (s_window_group_id[0] == '\0') {
+        snprintf(s_window_group_id, sizeof(s_window_group_id), "%d", getpid());
+    }
+
+    return s_window_group_id;
+}
+
+/**
+ * Set up a basic screen, so that the navigator will
+ * send window state events when the window state changes.
+ *
+ * @return @c EXIT_SUCCESS or @c EXIT_FAILURE
+ */
+static int SetupScreen(AppData_t *app)
+{
+	do {
+		if (screen_create_context(&app->screenContext, SCREEN_APPLICATION_CONTEXT) != 0) {
+			break;
+		}
+
+		if (screen_create_window(&app->screenWindow, app->screenContext) != 0) {
+			break;
+		}
+
+		if (screen_create_window_group(app->screenWindow, get_window_group_id()) != 0) {
+			break;
+		}
+
+		int usage = SCREEN_USAGE_NATIVE;
+		if (screen_set_window_property_iv(app->screenWindow, SCREEN_PROPERTY_USAGE, &usage) != 0) {
+			break;
+		}
+
+		if (screen_create_window_buffers(app->screenWindow, 1) != 0) {
+			break;
+		}
+
+		screen_buffer_t buff;
+		if (screen_get_window_property_pv(app->screenWindow, SCREEN_PROPERTY_RENDER_BUFFERS, (void*)&buff) != 0) {
+			break;
+		}
+
+		int buffer_size[2];
+		if (screen_get_buffer_property_iv(buff, SCREEN_PROPERTY_BUFFER_SIZE, buffer_size) != 0) {
+			break;
+		}
+
+		int attribs[] = { SCREEN_BLIT_COLOR, 0xff0092cd, SCREEN_BLIT_END };
+		if (screen_fill(app->screenContext, buff, attribs) != 0) {
+			break;
+		}
+
+		int dirty_rects[4] = {0, 0, buffer_size[0], buffer_size[1]};
+		if (screen_post_window(app->screenWindow, buff, 1, (const int*)dirty_rects, 0) != 0) {
+			break;
+		}
+
+		return EXIT_SUCCESS;
+	}
+	while (false);
+
+	TeardownScreen(app);
+
+	return EXIT_FAILURE;
+}
+
+static void TeardownScreen(AppData_t *app)
+{
+	if (app->screenWindow) {
+		screen_destroy_window(app->screenWindow);
+		app->screenWindow = NULL;
+	}
+	if (app->screenContext) {
+		screen_destroy_context(app->screenContext);
+		app->screenContext = NULL;
+	}
 }
 
 /* EOF */
