@@ -14,34 +14,57 @@
 * limitations under the License.
 */
 
-#ifndef SCORELOOPDATA_HPP_
-#define SCORELOOPDATA_HPP_
+#ifndef SCORELOOPDATA_HPP
+#define SCORELOOPDATA_HPP
 
 #include <QtCore/QObject>
-#include <QtDeclarative/QtDeclarative>
+
 #include <scoreloop/scoreloopcore.h>
 
-class ScoreloopData: public QObject {
-	Q_OBJECT
-	Q_PROPERTY(QString userName READ userName NOTIFY userNameChanged);
+/**
+ * @short The central class that provides Scoreloop functionality to the UI
+ *
+ * The ScoreloopData class uses the low-level C API internally to access the
+ * Scoreloop service and provides a high-level API (properties, signals and slots)
+ * so that the UI can access information, trigger some action or be informed about
+ * state changes.
+ */
+//! [0]
+class ScoreloopData : public QObject
+{
+    Q_OBJECT
+
+    // The name of the user at the Scoreloop service
+    Q_PROPERTY(QString userName READ userName NOTIFY userNameChanged);
+
 public:
-	ScoreloopData(SC_Client_h client);
-	QString userName();
-	Q_INVOKABLE void load();
+    // Creates a new ScoreloopData object
+    ScoreloopData(SC_Client_h client, QObject *parent = 0);
+
+public Q_SLOTS:
+    // Triggers the load of the user name from the Scoreloop service
+    void load();
 
 Q_SIGNALS:
-	void userNameChanged();
+    // The change notification signal of the property
+    void userNameChanged();
 
-protected:
-	static void userControllerCallback(void* cookie, SC_Error_t status);
-	static QString asQString(SC_String_h scString);
 private:
-	void updateUser();
-	SC_Client_h client_;
-	SC_UserController_h userController_;
-	SC_User_h user_;
+    // A helper method for integration with the low-level C API
+    static void userControllerCallback(void* cookie, SC_Error_t status);
+
+    // The accessor method of the property
+    QString userName() const;
+
+    // The handle to access the Scoreloop service
+    SC_Client_h m_client;
+
+    // The handle to access the Scoreloop user service
+    SC_UserController_h m_userController;
+
+    // The handle that represents the Scoreloop user
+    SC_User_h m_user;
 };
+//! [0]
 
-QML_DECLARE_TYPE(ScoreloopData);
-
-#endif /* SCORELOOPDATA_HPP_ */
+#endif

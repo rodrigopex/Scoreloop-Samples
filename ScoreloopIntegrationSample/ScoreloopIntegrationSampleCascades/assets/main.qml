@@ -17,28 +17,72 @@
 import bb.cascades 1.0
 
 Page {
-    id: tab1
     Container {
-        leftPadding: 5
-        rightPadding: 5
+        topPadding: 20
+        bottomPadding: 10
+        rightPadding: 10
+
+        layout: DockLayout {}
+
+        background: Color.DarkGray
+
         Label {
-            text: qsTr("Scoreloop Sample Cascades")
             horizontalAlignment: HorizontalAlignment.Center
+            verticalAlignment: VerticalAlignment.Top
+
+            text: qsTr("Scoreloop Sample Cascades")
             textStyle {
                 base: SystemDefaults.TextStyles.TitleText
+                color: Color.White
             }
         }
-        Label {
-            text: "Your Username: " + scoreloop.userName
+
+        Container {
+            horizontalAlignment: HorizontalAlignment.Center
+            verticalAlignment: VerticalAlignment.Center
+
+            Label {
+                horizontalAlignment: HorizontalAlignment.Center
+                topMargin: 50
+
+                text: qsTr("Your username is")
+                textStyle {
+                    color: Color.White
+                }
+            }
+
+            //! [0]
+            Label {
+                horizontalAlignment: HorizontalAlignment.Center
+
+                text: _scoreloop.userName
+                textStyle {
+                    color: Color.White
+                }
+            }
+            //! [0]
+
+            //! [1]
+            Button {
+                horizontalAlignment: HorizontalAlignment.Center
+                topMargin: 100
+
+                text: qsTr("Reload")
+
+                onClicked: {
+                    console.log("scoreloop: " + _scoreloop);
+                    console.log("scoreloop.userName: " + _scoreloop.userName);
+                    _scoreloop.load();
+                }
+            }
+            //! [1]
         }
-        Button {
-            text: "Reload"
+
+        ImageView {
+            horizontalAlignment: HorizontalAlignment.Right
             verticalAlignment: VerticalAlignment.Bottom
-            onClicked: {
-                console.log("scoreloop: " + scoreloop);
-                console.log("scoreloop.userName: " + scoreloop.userName);
-                scoreloop.load();
-            }
+
+            imageSource: "asset:///images/logo.png"
         }
     }
 }

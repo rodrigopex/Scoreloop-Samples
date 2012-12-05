@@ -15,55 +15,12 @@
 */
 
 #include "ScoreloopData.hpp"
-#include <qdebug.h>
 
-ScoreloopData::ScoreloopData(SC_Client_h client) {
-	client_ = client;
-	user_ = 0;
+#include <QDebug>
 
-	// create controller
-
-	// we pass 'this' as cookie for the callback, so we can retrieve the it when in the
-	// static callback
-	SC_Client_CreateUserController(client_, &userController_, userControllerCallback, this);
-}
-
-void ScoreloopData::load() {
-	SC_UserController_LoadUser(userController_);
-}
-
-void ScoreloopData::userControllerCallback(void* cookie, SC_Error_t status) {
-	// this callback is registered when creating the controller
-	// it will be invoked every time the controller completes a request
-
-	// since this is a static function, we passed our object through as cookie
-	ScoreloopData* self = static_cast<ScoreloopData*>(cookie);
-
-	if(status == SC_OK) {
-		// loading went ok, we can update our properties
-		self->updateUser();
-	}
-	else {
-		// You might want to add proper error handling.
-		qDebug() << SC_MapErrorToStr(status);
-	}
-
-}
-
-void ScoreloopData::updateUser() {
-	// retrieves the user object from the controller
-	user_ = SC_UserController_GetUser(userController_);
-	Q_EMIT userNameChanged();
-}
-
-QString ScoreloopData::userName() {
-	if(user_) {
-		return asQString(SC_User_GetLogin(user_));
-	}
-	return "";
-}
-
-QString ScoreloopData::asQString(SC_String_h scString)
+// A helper method to convert a SC_String_h to a QString
+//! [0]
+static QString asQString(SC_String_h scString)
 {
     if (scString) {
         const char *cp = SC_String_GetData(scString);
@@ -71,5 +28,58 @@ QString ScoreloopData::asQString(SC_String_h scString)
             return QString::fromUtf8(cp);
         }
     }
-    return "";
+
+    return QString();
 }
+//! [0]
+
+//! [1]
+ScoreloopData::ScoreloopData(SC_Client_h client, QObject *parent)
+    : QObject(parent)
+    , m_client(client)
+    , m_userController(0)
+    , m_user(0)
+{
+    // We pass 'this' as cookie for the callback, so we can retrieve the it when in the
+    // static callback
+    SC_Client_CreateUserController(m_client, &m_userController, userControllerCallback, this);
+}
+//! [1]
+
+//! [2]
+void ScoreloopData::load()
+{
+    SC_UserController_LoadUser(m_userController);
+}
+//! [2]
+
+//! [3]
+void ScoreloopData::userControllerCallback(void* cookie, SC_Error_t status)
+{
+    // This callback is registered when creating the controller
+    // it will be invoked every time the controller completes a request
+
+    // Since this is a static function, we passed our object through as cookie
+    ScoreloopData* self = static_cast<ScoreloopData*>(cookie);
+
+    if (status == SC_OK) {
+        // Loading went ok, we can update our properties
+        self->m_user = SC_UserController_GetUser(self->m_userController);
+        emit self->userNameChanged();
+    } else {
+        // You might want to add proper error handling.
+        qDebug() << SC_MapErrorToStr(status);
+    }
+}
+//! [3]
+
+//! [4]
+QString ScoreloopData::userName() const
+{
+    if (m_user) {
+        return asQString(SC_User_GetLogin(m_user));
+    }
+
+    return QString();
+}
+//! [4]

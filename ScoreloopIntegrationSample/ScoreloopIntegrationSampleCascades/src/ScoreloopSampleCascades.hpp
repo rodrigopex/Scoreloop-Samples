@@ -14,36 +14,39 @@
 * limitations under the License.
 */
 
-#ifndef ScoreloopSampleCascades_HPP_
-#define ScoreloopSampleCascades_HPP_
+#ifndef SCORELOOPSAMPLECASCADES_HPP
+#define SCORELOOPSAMPLECASCADES_HPP
+
+#include <scoreloop/scoreloopcore.h>
 
 #include <QObject>
-#include <scoreloop/scoreloopcore.h>
-#include "ScoreloopBpsEventHandler.hpp"
-#include "ScoreloopData.hpp"
 
 namespace bb { namespace cascades { class Application; }}
+
+class ScoreloopBpsEventHandler;
 
 /*!
  * @brief Application pane object
  *
- *Use this object to create and init app UI, to create context objects, to register the new meta types etc.
+ * Use this object to create and init app UI, to create context objects, to register the new meta types etc.
  */
+//! [0]
 class ScoreloopSampleCascades : public QObject
 {
     Q_OBJECT
+
 public:
     ScoreloopSampleCascades(bb::cascades::Application *app);
-    virtual ~ScoreloopSampleCascades() {}
+    ~ScoreloopSampleCascades();
 
     Q_SLOT void showMain();
 
 private:
-    SC_InitData_t initData_;
-    SC_Client_h client_;
+    SC_InitData_t m_initData;
+    SC_Client_h m_client;
 
-    ScoreloopBpsEventHandler* eventHandler_;
-    ScoreloopData* scoreloopData_;
+    ScoreloopBpsEventHandler* m_eventHandler;
 };
+//! [0]
 
-#endif /* ScoreloopSampleCascades_HPP_ */
+#endif
