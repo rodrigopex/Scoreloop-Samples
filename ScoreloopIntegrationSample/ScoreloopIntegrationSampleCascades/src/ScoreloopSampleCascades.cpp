@@ -28,7 +28,6 @@
 #include <QtDeclarative/QtDeclarative>
 
 #include <scoreloop/scoreloopcore.h>
-#include "ScoreloopDefines.hpp"
 
 using namespace bb::cascades;
 
