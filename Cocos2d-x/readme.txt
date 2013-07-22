@@ -1,13 +1,12 @@
-Scoreloop Integration - Show integration with BPS event system - v2.0.0 
+Scoreloop Integration - Show integration with BPS event system - v2.0.0
 
 These samples demonstrate how to integrate Scoreloop with the BPS event
 system, make some API calls and receive data in callbacks.
 
 =========================================================================
-This repository contains three sample applications:
- - Managed: Eclipse toolchain used to build, configurable through Project
-     Properties dialog
- - Makefile: Builds with a Makefile, allows you to tweak all build settings
+This repository contains a sample application:
+ - Cocos2d-x: Shows how to use Scoreloop in an application built with the
+     Cocos2d-x UI framework.
 
 =========================================================================
 Requirements:
@@ -20,13 +19,11 @@ Requirements:
 =========================================================================
 Importing a project into the Native SDK:
 
-1. From the the Sample apps page, download and extract the sample application.
-2. Launch the Native SDK.
-3. On the File menu, click Import.
-4. Expand General, and select Existing Projects into Workspace. Click Next.
-5. Browse to the location where you extracted the sample app, and click OK.
-The sample project should display in the the Projects section.
-6. Click Finish to import the project into your workspace.
+1. Download latest Cocos2d-x from http://www.cocos2d-x.org/.
+2. Import Cocos2d-x into the workspace on NDK.
+3. Import Scoreloop sample.
+4. Set build variable COCOS2DX_HOME to Cocos2d-x directory.
+5. Build the Cocos2d-x project. 
 
 =========================================================================
  Copyright (c) 2012 Research In Motion Limited.
@@ -42,4 +39,3 @@ The sample project should display in the the Projects section.
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
  limitations under the License.
-
