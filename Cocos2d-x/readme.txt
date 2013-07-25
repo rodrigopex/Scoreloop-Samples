@@ -19,11 +19,14 @@ Requirements:
 =========================================================================
 Importing a project into the Native SDK:
 
-1. Download latest Cocos2d-x from http://www.cocos2d-x.org/.
-2. Import Cocos2d-x into the workspace on NDK.
-3. Import Scoreloop sample.
-4. Set build variable COCOS2DX_HOME to Cocos2d-x directory.
-5. Build the Cocos2d-x project. 
+1. Download latest Cocos2d-x from http://www.cocos2d-x.org/ and extract it to your workspace.
+2. Import relevant proj.blackberry projects into the workspace.
+3. Import Scoreloop sample from Github.
+4. In Scoreloop sample, set build variable: COCOS2DX_HOME to Cocos2d-x directory.
+5. Build the Cocos2d-x project.
+6. Build the Scoreloop sample.
+
+NOTE: Both Cocos2d-x and Scoreloop sample must have the same target: device or simulator.
 
 =========================================================================
  Copyright (c) 2012 Research In Motion Limited.

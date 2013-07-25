@@ -4,7 +4,7 @@ These samples demonstrate how to integrate Scoreloop with the BPS event
 system, make some API calls and receive data in callbacks.
 
 =========================================================================
-This repository contains three sample applications:
+This repository contains two sample applications:
  - Managed: Eclipse toolchain used to build, configurable through Project
      Properties dialog
  - Makefile: Builds with a Makefile, allows you to tweak all build settings
@@ -20,7 +20,7 @@ Requirements:
 =========================================================================
 Importing a project into the Native SDK:
 
-1. From the the Sample apps page, download and extract the sample application.
+1. You have already cloned the repo from Github.
 2. Launch the Native SDK.
 3. On the File menu, click Import.
 4. Expand General, and select Existing Projects into Workspace. Click Next.

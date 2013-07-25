@@ -19,7 +19,7 @@ Requirements:
 =========================================================================
 Importing a project into the Native SDK:
 
-1. From the the Sample apps page, download and extract the sample application.
+1. You have already cloned the repo from Github.
 2. Launch the Native SDK.
 3. On the File menu, click Import.
 4. Expand General, and select Existing Projects into Workspace. Click Next.
