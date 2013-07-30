@@ -18,11 +18,11 @@
 #define SCORELOOPDEFINES_HPP
 
 //! [0]
-/* These are the game id and game secret from the SL Demo TNG game - use your credentials (and SLAward.bundle) instead */
-#define GAME_ID         "f9fa2829-532c-4c71-856f-96b585a135db"
-#define GAME_SECRET     "I1mpr5hwWh3yIEEaJXCizB6FS4gnvhrVTSSpuM0uGhoDNZU60ykWGw=="
+/* These are the game id and game secret from the SL Oxygen game - use your credentials (and SLAward.bundle) instead */
+#define GAME_ID         "d8be0ab4-9a41-4a26-b956-f5af6a305fca"
+#define GAME_SECRET     "FsTKEQEN6GnBqao/6PKc1rKuPhA8PxwWvtxqJAtQD6suu9kZcssm4g=="
 #define GAME_VERSION    "1.0"
-#define GAME_CURRENCY   "XPT"
+#define GAME_CURRENCY   "AAZ"
 #define GAME_LANGUAGE   "en"
 //! [0]
 
