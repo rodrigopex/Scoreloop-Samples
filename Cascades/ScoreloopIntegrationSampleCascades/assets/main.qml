@@ -77,12 +77,5 @@ Page {
             }
             //! [1]
         }
-
-        ImageView {
-            horizontalAlignment: HorizontalAlignment.Right
-            verticalAlignment: VerticalAlignment.Bottom
-
-            imageSource: "asset:///images/logo.png"
-        }
     }
 }
