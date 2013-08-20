@@ -1,5 +1,8 @@
 /*
-* Copyright (c) 2012 Research In Motion Limited.
+* This file originates from templates from http://www.cocos2d-x.org/
+* See LICENSE for details of cocos2d-x license.
+*
+* Portions Copyright (c) 2012 Research In Motion Limited.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
