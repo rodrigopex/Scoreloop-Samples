@@ -1,0 +1,16 @@
+eclipse.preferences.version=1
+environment/project/com.qnx.qcc.configuration.exe.debug.446234419/COCOS2DX_HOME/delimiter=;
+environment/project/com.qnx.qcc.configuration.exe.debug.446234419/COCOS2DX_HOME/operation=replace
+environment/project/com.qnx.qcc.configuration.exe.debug.446234419/COCOS2DX_HOME/value=S\:/cocos2d-x
+environment/project/com.qnx.qcc.configuration.exe.debug.446234419/append=true
+environment/project/com.qnx.qcc.configuration.exe.debug.446234419/appendContributed=true
+environment/project/com.qnx.qcc.configuration.exe.debug.660208940/COCOS2DX_HOME/delimiter=;
+environment/project/com.qnx.qcc.configuration.exe.debug.660208940/COCOS2DX_HOME/operation=append
+environment/project/com.qnx.qcc.configuration.exe.debug.660208940/COCOS2DX_HOME/value=S\:/cocos2d-x
+environment/project/com.qnx.qcc.configuration.exe.debug.660208940/append=true
+environment/project/com.qnx.qcc.configuration.exe.debug.660208940/appendContributed=true
+environment/project/com.qnx.qcc.configuration.exe.release.1265921422/COCOS2DX_HOME/delimiter=;
+environment/project/com.qnx.qcc.configuration.exe.release.1265921422/COCOS2DX_HOME/operation=append
+environment/project/com.qnx.qcc.configuration.exe.release.1265921422/COCOS2DX_HOME/value=S\:/cocos2d-x
+environment/project/com.qnx.qcc.configuration.exe.release.1265921422/append=true
+environment/project/com.qnx.qcc.configuration.exe.release.1265921422/appendContributed=true
