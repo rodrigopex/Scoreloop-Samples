@@ -89,5 +89,6 @@ void ScoreloopSampleCascades::showMain()
 
 ScoreloopSampleCascades::~ScoreloopSampleCascades()
 {
+	SC_Client_Release(m_client);
     delete m_eventHandler;
 }

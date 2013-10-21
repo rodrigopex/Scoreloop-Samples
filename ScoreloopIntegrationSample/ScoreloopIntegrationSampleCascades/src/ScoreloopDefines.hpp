@@ -19,10 +19,10 @@
 
 //! [0]
 /* These are the game id and game secret from the SL Demo TNG game - use your credentials (and SLAward.bundle) instead */
-#define GAME_ID         "f9fa2829-532c-4c71-856f-96b585a135db"
-#define GAME_SECRET     "I1mpr5hwWh3yIEEaJXCizB6FS4gnvhrVTSSpuM0uGhoDNZU60ykWGw=="
+#define GAME_ID         "f630ec8b-8093-4bff-a737-51ddd91c9919"
+#define GAME_SECRET     "p7PUN4scDV8xl8kUamsT8YBbfaY4GVu+HpaEcsGbSu+AneEgbjyEPQ=="
 #define GAME_VERSION    "1.0"
-#define GAME_CURRENCY   "XPT"
+#define GAME_CURRENCY   "BFX"
 #define GAME_LANGUAGE   "en"
 //! [0]
 
